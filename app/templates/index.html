@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Home - VidShare{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">{% if q %}Search results{% else %}Latest videos{% endif %}</h1>
+        {% if q %}<p class="text-muted mb-0">Results for "{{ q }}"</p>{% endif %}
+    </div>
+</div>
+
+{% if videos %}
+<div class="row g-4">
+    {% for video in videos %}
+    <div class="col-sm-6 col-lg-4">
+        <div class="card h-100 video-card shadow-sm">
+            <a class="video-preview" href="{{ url_for('videos.watch', video_id=video.id) }}">
+                <video muted preload="metadata">
+                    <source src="{{ video.video_url }}">
+                </video>
+                <div class="play-badge">▶</div>
+            </a>
+            <div class="card-body">
+                <a class="text-decoration-none text-dark" href="{{ url_for('videos.watch', video_id=video.id) }}">
+                    <h2 class="h5">{{ video.title }}</h2>
+                </a>
+                <a class="text-decoration-none text-muted" href="{{ url_for('main.profile', username=video.author.username) }}">
+                    {{ video.author.username }}
+                </a>
+                <div class="small text-muted mt-1">
+                    {{ video.views }} views · {{ video.likes|length }} likes
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <h2 class="h4">No videos found</h2>
+    {% if current_user.is_authenticated %}
+    <a class="btn btn-primary mt-2" href="{{ url_for('videos.upload') }}">Upload the first video</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

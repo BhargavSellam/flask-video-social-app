@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{{ video.title }} - VidShare{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="video-player-wrap bg-black rounded overflow-hidden">
+            <video class="w-100" controls playsinline>
+                <source src="{{ video.video_url }}">
+                Your browser does not support HTML video.
+            </video>
+        </div>
+
+        <h1 class="h3 mt-3">{{ video.title }}</h1>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+            <div>
+                <a class="fw-semibold text-decoration-none" href="{{ url_for('main.profile', username=video.author.username) }}">
+                    {{ video.author.username }}
+                </a>
+                <div class="small text-muted">{{ video.views }} views</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                {% if current_user.is_authenticated %}
+                <form method="POST" action="{{ url_for('videos.toggle_like', video_id=video.id) }}">
+                    <button class="btn {% if user_has_liked %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        👍 {{ video.likes|length }}
+                    </button>
+                </form>
+                {% else %}
+                <span class="btn btn-outline-secondary disabled">👍 {{ video.likes|length }}</span>
+                {% endif %}
+
+                {% if current_user.is_authenticated and current_user.id == video.user_id %}
+                <form method="POST" action="{{ url_for('videos.delete_video', video_id=video.id) }}"
+                      onsubmit="return confirm('Delete this video?');">
+                    <button class="btn btn-outline-danger">Delete</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="description-box p-3 rounded mb-4">
+            <div class="small fw-semibold mb-2">{{ video.created_at.strftime('%d %b %Y') }}</div>
+            <div class="preserve-lines">{{ video.description or "No description." }}</div>
+        </div>
+
+        <h2 class="h4">{{ video.comments|length }} Comments</h2>
+
+        {% if current_user.is_authenticated %}
+        <form class="mb-4" method="POST" action="{{ url_for('videos.add_comment', video_id=video.id) }}">
+            <textarea class="form-control" name="content" rows="3" maxlength="2000" placeholder="Add a comment..." required></textarea>
+            <button class="btn btn-primary mt-2">Comment</button>
+        </form>
+        {% else %}
+        <div class="alert alert-light border">
+            <a href="{{ url_for('auth.login') }}">Login</a> to comment.
+        </div>
+        {% endif %}
+
+        {% for comment in video.comments %}
+        <div class="border-bottom py-3">
+            <div class="d-flex justify-content-between gap-3">
+                <div>
+                    <a class="fw-semibold text-decoration-none" href="{{ url_for('main.profile', username=comment.author.username) }}">
+                        {{ comment.author.username }}
+                    </a>
+                    <span class="small text-muted ms-2">{{ comment.created_at.strftime('%d %b %Y %H:%M') }}</span>
+                    <div class="mt-1 preserve-lines">{{ comment.content }}</div>
+                </div>
+
+                {% if current_user.is_authenticated and comment.user_id == current_user.id %}
+                <form method="POST" action="{{ url_for('videos.delete_comment', comment_id=comment.id) }}">
+                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <p class="text-muted">No comments yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
